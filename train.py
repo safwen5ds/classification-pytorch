@@ -11,6 +11,7 @@ from torch.cuda.amp import GradScaler, autocast
 from torch.optim.lr_scheduler import StepLR
 
 from src.utils import plot_loss_curves
+from contextlib import nullcontext
 
 
 # Enhanced logging without icons
@@ -116,12 +117,12 @@ def train_classifier(model, train_loader, val_loader, criterion, optimizer, num_
         use_mlflow
     )
 
-    # MLflow context manager only if MLflow is enabled
     if use_mlflow:
-        run_context = mlflow.start_run(run_name=run_name)
+        if mlflow.active_run() is not None:
+            run_context = mlflow.start_run(run_name=run_name, nested=True)
+        else:
+            run_context = mlflow.start_run(run_name=run_name)
     else:
-        # Create a dummy context manager that does nothing
-        from contextlib import nullcontext
         run_context = nullcontext()
 
     with run_context:
